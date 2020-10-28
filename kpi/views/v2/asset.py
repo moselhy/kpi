@@ -8,6 +8,7 @@ from hashlib import md5
 from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import exceptions, renderers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -199,6 +200,12 @@ class AssetViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
                         XlsRenderer,
                         )
 
+    def get_object(self):
+        this = super().get_object()
+        this.last_accessed = timezone.now()
+        this.save()
+        return this
+
     def get_serializer_class(self):
         if self.action == 'list':
             return AssetListSerializer
@@ -364,7 +371,7 @@ class AssetViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
             renderer_classes=[renderers.JSONRenderer])
     def hash(self, request):
         """
-        Creates an hash of `version_id` of all accessible assets by the user.
+        Creates a hash of `version_id` of all accessible assets by the user.
         Useful to detect changes between each request.
 
         :param request:
